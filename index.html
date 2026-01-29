@@ -1,0 +1,116 @@
+<!-- Written by Gemini 3 Pro on 1/29/2026 -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>World's Hardest Game</title>
+    
+    <style>
+        body { font-family: sans-serif; padding: 20px; background-color: #f4f4f9; }
+        h2 { color: #333; }
+        
+        /* This matches your Java window size EXACTLY */
+        #container {
+            width: 850px;
+            height: 650px;
+            margin: 20px 0;
+            border: 2px solid #ddd;
+            background-color: #fff;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            overflow: hidden; /* Prevents scrollbars */
+        }
+        
+        /* Fixes the tiny gap at the bottom of the canvas */
+        #container canvas { display: block; }
+
+        #status { color: #666; font-style: italic; margin-bottom: 10px; font-weight: bold; }
+        .error { color: red !important; display: block !important; }
+    </style>
+</head>
+<body>
+
+    <h2>Sun Position Calculator</h2>
+    <div id="status">Initializing System...</div>
+    <div id="container"></div>
+
+    <script>
+        async function runCheerpJ() {
+            const statusLabel = document.getElementById('status');
+            
+            try {
+                // 1. Initialize
+                statusLabel.innerText = "Initializing JVM (Java 17 Mode)...";
+                if (typeof cheerpjInit === 'undefined') throw new Error("CheerpJ library missing.");
+
+                await cheerpjInit({ version: 17 });
+                
+                // 2. Create Display
+                statusLabel.innerText = "Creating Display...";
+                cheerpjCreateDisplay(850, 650, document.getElementById("container"));
+                
+                // 3. Prepare Path
+                statusLabel.innerText = "Downloading Application...";
+                
+                let folderPath = window.location.pathname;
+                if (folderPath.endsWith("index.html")) {
+                    folderPath = folderPath.substring(0, folderPath.lastIndexOf('/'));
+                }
+                if (!folderPath.endsWith("/")) {
+                    folderPath += "/";
+                }
+                
+                const cacheBuster = new Date().getTime();
+                const jarPath = `/app${folderPath}WorldsHardestGame.jar?v=${cacheBuster}`;
+                
+                console.log("Loading JAR from:", jarPath); 
+                
+                // 4. Run JAR (Without Await)
+                // We do NOT use 'await' here so the script continues immediately.
+                cheerpjRunJar(jarPath).catch(e => {
+                    // If it crashes later, show the error
+                    console.error(e);
+                    statusLabel.style.display = 'block';
+                    statusLabel.className = 'error';
+                    statusLabel.innerText = "Runtime Error: " + e;
+                });
+                
+                // 5. Hide the text IMMEDIATELY
+                // The download will continue in the background.
+                statusLabel.style.display = 'none';
+                
+            } catch (e) {
+                if (statusLabel) {
+                    statusLabel.style.display = 'block';
+                    statusLabel.className = 'error';
+                    statusLabel.innerText = "Runtime Error: " + e;
+                }
+                console.error(e);
+            }
+        }
+
+        function waitForLibrary(attempts = 0) {
+            if (typeof cheerpjInit !== 'undefined') {
+                runCheerpJ();
+            } else {
+                if (attempts > 100) return;
+                setTimeout(() => waitForLibrary(attempts + 1), 100);
+            }
+        }
+
+        function loadCheerpJLibrary() {
+            const script = document.createElement('script');
+            script.src = "https://cjrtnc.leaningtech.com/4.2/loader.js";
+            script.onload = () => waitForLibrary();
+            script.onerror = () => {
+                const sl = document.getElementById('status');
+                if (sl) sl.innerText = "Network Error: Could not load CheerpJ.";
+            };
+            document.head.appendChild(script);
+        }
+
+        loadCheerpJLibrary();
+    </script>
+</body>
+</html>
+
